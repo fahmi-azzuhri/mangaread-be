@@ -1,6 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const mangaDirektori = require("../service/mangaDirektori");
+const multer = require("multer");
+// const upload = multer({ dest: "uploads/" });
+const storage = multer.diskStorage({
+  destination: "public/uploads/",
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
+const upload = multer({ storage: storage });
 
 /* GET Manga */
 router.get("/", async function (req, res, next) {
@@ -12,7 +21,7 @@ router.get("/", async function (req, res, next) {
   }
 });
 
-router.post("/", async function (req, res, next) {
+router.post("/", upload.single("file_komik"), async function (req, res, next) {
   try {
     res.json(await mangaDirektori.create(req.body));
   } catch (err) {

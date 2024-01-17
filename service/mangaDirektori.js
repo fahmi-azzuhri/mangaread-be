@@ -14,13 +14,24 @@ async function getMultiple(page = 1) {
   };
 }
 
-async function create(mangaData) {
+async function create(mangaData, fileMangaData) {
   try {
     const result = await db.query(
       `INSERT INTO manga 
       (judul, penulis, penerbit, tanggal_rilis, rating, jumlah_volume, url_baca) 
       VALUES 
-      ('${mangaData.judul}', '${mangaData.penulis}', '${mangaData.penerbit}', '${mangaData.tanggal_rilis}', ${mangaData.rating}, ${mangaData.jumlah_volume}, '${mangaData.url_baca}')`
+      (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        mangaData.judul,
+        mangaData.penulis,
+        mangaData.penerbit,
+        mangaData.tanggal_rilis,
+        mangaData.rating,
+        mangaData.jumlah_volume,
+        `http://localhost:2000/uploads/${
+          fileMangaData ? fileMangaData.originalname : ""
+        }`,
+      ]
     );
 
     if (result.affectedRows) {
@@ -29,6 +40,7 @@ async function create(mangaData) {
       return { message: "Error in creating manga" };
     }
   } catch (error) {
+    console.error(error);
     // Handle any database errors here
     return { message: "Error in creating manga" };
   }
