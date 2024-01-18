@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const mangaDirektori = require("../service/mangaDirektori");
+const { body, validationResult } = require("express-validator");
 
 const multer = require("multer");
 // const upload = multer({ dest: 'uploads/' }) // definisikan folder tujuan upload disini
@@ -25,8 +26,33 @@ router.get("/", async function (req, res, next) {
 
 router.post(
   "/",
-  upload.single("file_komik"), // isi dengan nama kolom yang akan digunakan untuk mengupload file
+  upload.single("file_komik"), // replace with the actual field name used for file upload
+  [
+    body().custom((value, { req }) => {
+      const allowedMimeTypes = ["application/pdf", "image/png"];
+
+      if (!allowedMimeTypes.includes(req.file.mimetype)) {
+        throw new Error("File harus berupa PDF atau PNG");
+      }
+
+      const maxSizeInBytes = 15000000;
+      if (req.file.size > maxSizeInBytes) {
+        throw new Error(
+          `File harus kurang dari ${maxSizeInBytes / 1000000} MB`
+        );
+      }
+
+      return true;
+    }),
+  ],
   async function (req, res, next) {
+    // Check for validation errors
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     try {
       res.json(await mangaDirektori.create(req.body, req.file));
     } catch (err) {
@@ -38,8 +64,32 @@ router.post(
 
 router.put(
   "/:id",
-  upload.single("file_komik"),
+  upload.single("file_komik"), // replace with the actual field name used for file upload
+  [
+    body().custom((value, { req }) => {
+      const allowedMimeTypes = ["application/pdf", "image/png"];
+
+      if (!allowedMimeTypes.includes(req.file.mimetype)) {
+        throw new Error("File harus berupa PDF atau PNG");
+      }
+
+      const maxSizeInBytes = 15000000;
+      if (req.file.size > maxSizeInBytes) {
+        throw new Error(
+          `File harus kurang dari ${maxSizeInBytes / 1000000} MB`
+        );
+      }
+
+      return true;
+    }),
+  ],
   async function (req, res, next) {
+    // Check for validation errors
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
     try {
       res.json(await mangaDirektori.update(req.params.id, req.body, req.file));
     } catch (err) {
